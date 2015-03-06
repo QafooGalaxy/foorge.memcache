@@ -1,0 +1,31 @@
+---
+- name: "Install Memcache"
+  apt: pkg=memcached state=latest
+
+- name: "Remove default memcached.conf"
+  file: path=/etc/memcached.conf state=absent
+
+- name: "Configure Memcache Servers"
+  template: >
+    src=memcache.conf.j2
+    dest==/etc/memcached
+  notify: Restart Memcache
+  with_items: memcache_pools
+
+- name: "Register Memcache Consul Services"
+  template: >
+    src=consul.json.j2
+    dest=/etc/consul.d/memcache.conf
+  register: memcache_consul_changed
+
+- name: "Register Memcache Urls in Consul KV"
+  command: >
+      curl -d"http://{{ item.name|default(item.app) }}.memcache.service.consul:{{ item.port|default(memcache_port) }}" -XPUT "http://localhost:8500/v1/kv/apps/{{ item.name|default(item.app) }}/memcache/url/{{ item.name|default(item.app) }}"
+  with_items: memcache_pools
+
+- name: "Ensure Memcache is started"
+  service: name=memcached state=started
+
+- name: Reload Consul
+  command: consul reload
+  when: memcache_consul_changed|changed
