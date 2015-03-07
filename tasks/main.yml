@@ -26,6 +26,6 @@
 - name: "Ensure Memcache is started"
   service: name=memcached state=started
 
-- name: Reload Consul
+- name: "Reload Consul"
   command: consul reload
   when: memcache_consul_changed|changed
