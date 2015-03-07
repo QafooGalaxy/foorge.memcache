@@ -2,7 +2,7 @@
     "services": [
 {% for item in memcache_pools %}
     {
-        "name": "memcache_{[ item.name|default(item.app) }}",
+        "name": "memcache",
         "tags": ["{{ item.name|default(item.app) }}"],
         "port": {{ item.port|default(memcache_port) }}
     }{% if not loop.last %},{% endif %}

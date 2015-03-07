@@ -8,19 +8,19 @@
 - name: "Configure Memcache Servers"
   template: >
     src=memcache.conf.j2
-    dest==/etc/memcached
+    dest=/etc/memcached
   notify: Restart Memcache
   with_items: memcache_pools
 
 - name: "Register Memcache Consul Services"
   template: >
     src=consul.json.j2
-    dest=/etc/consul.d/memcache.conf
+    dest=/etc/consul.d/memcache.json
   register: memcache_consul_changed
 
 - name: "Register Memcache Urls in Consul KV"
   command: >
-      curl -d"http://{{ item.name|default(item.app) }}.memcache.service.consul:{{ item.port|default(memcache_port) }}" -XPUT "http://localhost:8500/v1/kv/apps/{{ item.name|default(item.app) }}/memcache/url/{{ item.name|default(item.app) }}"
+      curl -d"{{ item.name|default(item.app) }}.memcache.service.consul:{{ item.port|default(memcache_port) }}" -XPUT "http://localhost:8500/v1/kv/apps/{{ item.name|default(item.app) }}/memcache/connection/{{ item.name|default(item.app) }}"
   with_items: memcache_pools
 
 - name: "Ensure Memcache is started"
